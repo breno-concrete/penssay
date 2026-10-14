@@ -1,4 +1,4 @@
-# NotaMil
+# Penssay
 
 **Snap a photo of your handwritten ENEM essay draft and get a score for each of the 5 competencies, plus concrete tips to improve. Everything runs on open-weight models, locally.**
 
