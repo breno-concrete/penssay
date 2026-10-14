@@ -41,7 +41,7 @@ The student-review step is deliberate: a handwriting misread must never silently
 
 ## Why open source
 
-| Concern | With a closed API | With NotaMil |
+| Concern | With a closed API | With Penssay |
 | --- | --- | --- |
 | Cost per essay | Paid per token, twice per essay (vision + grading) | Zero API cost; runs on the user's or the school's own hardware |
 | Privacy | Student photos and texts go to a third-party server | The photo never leaves the machine |
@@ -86,8 +86,8 @@ The transcription model is a configuration value. If the transcription test pick
 ### Package layout
 
 ```
-src/main/java/com/notamil/
-├── NotaMilApplication.java
+src/main/java/br/com/breno/penssay/
+├── PenssayApplication.java
 ├── transcription/
 │   ├── TranscriptionController.java
 │   ├── TranscriptionService.java
@@ -184,7 +184,7 @@ These rules are the source of truth for `prompts/transcription.st`.
 4. Ignore crossed-out words.
 5. Return only the transcribed text, with no title or comments.
 
-`ImageTiler` optionally splits the photo into horizontal strips before transcription. Vision models downscale large images, which erases small details such as accents and the cedilla. Strips overlap by 10% of their height, and the duplicated line at each boundary is removed when the strips are joined. Tiling is off by default and is turned on with `notamil.transcription.tiles`.
+`ImageTiler` optionally splits the photo into horizontal strips before transcription. Vision models downscale large images, which erases small details such as accents and the cedilla. Strips overlap by 10% of their height, and the duplicated line at each boundary is removed when the strips are joined. Tiling is off by default and is turned on with `penssay.transcription.tiles`.
 
 ## Getting started
 
@@ -205,8 +205,8 @@ ollama pull gemma3:4b
 ### 2. Run the app
 
 ```bash
-git clone https://github.com/<your-user>/notamil.git
-cd notamil
+git clone https://github.com/<your-user>/penssay.git
+cd penssay
 ./mvnw spring-boot:run
 ```
 
@@ -233,9 +233,9 @@ Open `http://localhost:8080`.
 spring.ai.ollama.base-url=http://localhost:11434
 spring.ai.ollama.chat.options.temperature=0
 
-notamil.transcription.model=qwen2.5vl:7b
-notamil.transcription.tiles=1
-notamil.evaluation.model=gemma3:4b
+penssay.transcription.model=qwen2.5vl:7b
+penssay.transcription.tiles=1
+penssay.evaluation.model=gemma3:4b
 
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
@@ -243,9 +243,9 @@ spring.servlet.multipart.max-request-size=10MB
 
 | Property | Default | Description |
 | --- | --- | --- |
-| `notamil.transcription.model` | `qwen2.5vl:7b` | Ollama vision model used to read the photo |
-| `notamil.transcription.tiles` | `1` | Number of horizontal strips; `1` disables tiling |
-| `notamil.evaluation.model` | `gemma3:4b` | Ollama model used for grading |
+| `penssay.transcription.model` | `qwen2.5vl:7b` | Ollama vision model used to read the photo |
+| `penssay.transcription.tiles` | `1` | Number of horizontal strips; `1` disables tiling |
+| `penssay.evaluation.model` | `gemma3:4b` | Ollama model used for grading |
 | `spring.ai.ollama.chat.options.temperature` | `0` | Keeps scores as stable as possible between runs |
 
 ## Evaluation
