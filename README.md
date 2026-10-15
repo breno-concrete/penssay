@@ -72,7 +72,7 @@ The student-review step is deliberate: a handwriting misread must never silently
 | Framework | Spring Boot (latest stable) |
 | AI integration | Spring AI with the Ollama starter |
 | Model server | Ollama |
-| Transcription model | `qwen2.5vl:7b` (chosen over `gemma3:4b` by the transcription test) |
+| Transcription model | `qwen2.5vl:7b` (candidates `qwen2.5vl:3b` and `gemma3:4b`; final choice pending the transcription test) |
 | Grading model | `gemma3:4b` (`gemma3:12b` when hardware allows) |
 | Frontend | Single static `index.html` served by Spring Boot, no framework |
 | Build | Maven |
@@ -125,6 +125,14 @@ Response `200 OK`:
 ```
 
 Words wrapped in `[?...]` are uncertain readings. `[illegible]` marks a word the model could not read.
+
+Errors return `{"message": "..."}` in Brazilian Portuguese:
+
+| Status | When |
+| --- | --- |
+| `400 Bad Request` | No photo, empty file, not JPEG/PNG, or larger than 10 MB |
+| `422 Unprocessable Entity` | No handwritten text was found in the photo |
+| `503 Service Unavailable` | Ollama is not running or the model is not available |
 
 #### `POST /api/evaluations`
 
