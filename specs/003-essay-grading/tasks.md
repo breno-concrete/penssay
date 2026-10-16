@@ -68,8 +68,8 @@ competências de 1 a 5, notas em {0, 40, 80, 120, 160, 200} e `totalScore` igual
 ### Implementação da História 1
 
 - [x] T012 [US1] [B] Implementar `ScoreNormalizer` em `src/main/java/br/com/breno/penssay/evaluation/ScoreNormalizer.java` até T010 e T011 ficarem verdes: `Math.floor(raw / 40.0 + 0.5) * 40` limitado a 0–200, validação de exatamente 1–5 uma vez cada, ordenação e soma; depois refatorar
-- [ ] T013 [P] [US1] [B] Escrever a rubrica C1–C5 em `src/main/resources/prompts/evaluation.st` (PT-BR, sem JSON de exemplo e sem chaves além de variáveis; research.md, decisões 1 e 4)
-- [ ] T014 [P] [US1] [B] Escrever `src/main/resources/prompts/evaluation-user.st` com as variáveis `{theme}` e `{text}`
+- [x] T013 [P] [US1] [B] Escrever a rubrica C1–C5 em `src/main/resources/prompts/evaluation.st` (PT-BR, sem JSON de exemplo e sem chaves além de variáveis; research.md, decisões 1 e 4)
+- [x] T014 [P] [US1] [B] Escrever `src/main/resources/prompts/evaluation-user.st` com as variáveis `{theme}` e `{text}`
 - [ ] T015 [US1] [B] Implementar `EvaluationService.evaluate(String theme, String text)` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`: `ChatClient` com `.system(evaluation.st)`, `.user(u -> u.text(...).param("theme", ...).param("text", ...))`, modelo de `penssay.evaluation.model` via `OllamaChatOptions`, `.call().entity(ModelEvaluation.class, spec -> spec.useProviderStructuredOutput())`, e montagem do `EssayEvaluation` com o `ScoreNormalizer` (depende de T012–T014)
 - [ ] T016 [US1] [B] Implementar `EvaluationController` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationController.java`: `@RestController`, `@RequestMapping("/api/evaluations")`, `@PostMapping` recebendo `@RequestBody EvaluationRequest` e delegando ao serviço (mesmo padrão do `TranscriptionController`)
 - [ ] T017 [US1] [B] Validar à mão o passo 2 do `quickstart.md` (caminho feliz com `samples/cartilha1.json`)
