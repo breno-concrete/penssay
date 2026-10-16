@@ -62,12 +62,12 @@ competências de 1 a 5, notas em {0, 40, 80, 120, 160, 200} e `totalScore` igual
 
 ### Testes da História 1 (TDD: escrever primeiro e ver falhar)
 
-- [ ] T010 [US1] [B] Escrever `ScoreNormalizerTest` em `src/test/java/br/com/breno/penssay/evaluation/ScoreNormalizerTest.java` com os casos de nota da tabela do `data-model.md` (0, 120, 200, 150→160, 130→120, 20→40, 180→200, 152.5→160, -40→0, 230→200, 1000→200) e o total do exemplo (150, 130, 20, 230, -40 → 520); rodar e ver vermelho
-- [ ] T011 [US1] [B] Acrescentar ao `ScoreNormalizerTest` os casos de validação da lista: fora de ordem → ordenada; 4 ou 6 competências, número repetido, número 0 ou 6 e lista nula → `EvaluationFormatException`
+- [x] T010 [US1] [B] Escrever `ScoreNormalizerTest` em `src/test/java/br/com/breno/penssay/evaluation/ScoreNormalizerTest.java` com os casos de nota da tabela do `data-model.md` (0, 120, 200, 150→160, 130→120, 20→40, 180→200, 152.5→160, -40→0, 230→200, 1000→200) e o total do exemplo (150, 130, 20, 230, -40 → 520); rodar e ver vermelho
+- [x] T011 [US1] [B] Acrescentar ao `ScoreNormalizerTest` os casos de validação da lista: fora de ordem → ordenada; 4 ou 6 competências, número repetido, número 0 ou 6 e lista nula → `EvaluationFormatException`
 
 ### Implementação da História 1
 
-- [ ] T012 [US1] [B] Implementar `ScoreNormalizer` em `src/main/java/br/com/breno/penssay/evaluation/ScoreNormalizer.java` até T010 e T011 ficarem verdes: `Math.floor(raw / 40.0 + 0.5) * 40` limitado a 0–200, validação de exatamente 1–5 uma vez cada, ordenação e soma; depois refatorar
+- [x] T012 [US1] [B] Implementar `ScoreNormalizer` em `src/main/java/br/com/breno/penssay/evaluation/ScoreNormalizer.java` até T010 e T011 ficarem verdes: `Math.floor(raw / 40.0 + 0.5) * 40` limitado a 0–200, validação de exatamente 1–5 uma vez cada, ordenação e soma; depois refatorar
 - [ ] T013 [P] [US1] [B] Escrever a rubrica C1–C5 em `src/main/resources/prompts/evaluation.st` (PT-BR, sem JSON de exemplo e sem chaves além de variáveis; research.md, decisões 1 e 4)
 - [ ] T014 [P] [US1] [B] Escrever `src/main/resources/prompts/evaluation-user.st` com as variáveis `{theme}` e `{text}`
 - [ ] T015 [US1] [B] Implementar `EvaluationService.evaluate(String theme, String text)` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`: `ChatClient` com `.system(evaluation.st)`, `.user(u -> u.text(...).param("theme", ...).param("text", ...))`, modelo de `penssay.evaluation.model` via `OllamaChatOptions`, `.call().entity(ModelEvaluation.class, spec -> spec.useProviderStructuredOutput())`, e montagem do `EssayEvaluation` com o `ScoreNormalizer` (depende de T012–T014)
