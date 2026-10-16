@@ -148,3 +148,28 @@ restam itens "NEEDS CLARIFICATION".
 - **Alternativa**: modelo maior (`qwen2.5vl:7b`). Não testada ainda; com 6 GB de VRAM parte
   dele roda na CPU, e deixa de ser Gemma.
 
+### 11.1 Loops de repetição (2026-10-16, tarde)
+
+- **Problema**: com a redação nota 740 (ENEM 2022, povos tradicionais), o `gemma3:4b` entrava
+  em loop na C1 e o Ollama abortava (`token repeat limit reached`) ou o JSON vinha cortado.
+  Mudar o prompt geral trocava qual redação travava (whack-a-mole). Com `temperature=0` o loop
+  é determinístico: repetir a chamada igual não adianta.
+- **Tentativas descartadas**: `repeat-penalty=1.1` (a 740 virou 120 em tudo e a 1000 passou a
+  cortar o JSON); `qwen2.5vl:7b` (481 s numa correção, metade do modelo na CPU, JSON cortado);
+  justificativa "no máximo 4 frases" (a C5 caiu para 120 e a C1 travou na 1000).
+- **Decisão**: `numPredict=1024` só na correção (a transcrição precisa de mais) e uma segunda
+  tentativa por competência com `temperature=0.4` quando a primeira falha por loop ou JSON.
+  A C4 cita até 5 recursos, sem repetir, em vez de listar todos.
+- **Medição** (`gemma3:4b`):
+
+  | Redação | Rodadas | Totais |
+  |---|---|---|
+  | nota 740 | 3 | 600, 640, 640 |
+  | nota 1000 | 3 (mesma config, sessões diferentes) | 840, 840, 760 |
+
+  Sem nenhum erro 500 nas últimas 4 rodadas. A ordem se mantém (740 < 1000), mas o modelo
+  comprime a escala: nota 1000 vira ~800 e nota 740 vira ~620. CS-004 (≥ 880) não é atingido.
+- **Transcrição (001)**: na foto da 740, o `gemma3:4b` levou 125 s, errou muitas palavras,
+  juntou as linhas da folha em parágrafos e terminou em loop ("mais, mais, ..."). Fica como
+  pendência da 001; confirma a decisão de contar palavras em vez de linhas.
+

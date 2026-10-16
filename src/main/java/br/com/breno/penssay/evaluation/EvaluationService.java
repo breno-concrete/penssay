@@ -2,10 +2,12 @@ package br.com.breno.penssay.evaluation;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.retry.TransientAiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +18,9 @@ import java.util.List;
 public class EvaluationService {
 
     private static final int COMPETENCY_COUNT = 5;
+    // caps each answer so a repetition loop fails fast instead of filling the model's 4096-token context
+    private static final int MAX_ANSWER_TOKENS = 1024;
+    private static final double RETRY_TEMPERATURE = 0.4;
 
     private final ChatClient chatClient;
     private final Resource systemPrompt;
@@ -58,10 +63,20 @@ public class EvaluationService {
     }
 
     private ModelCompetencyAnswer evaluateCompetency(int number, String theme, String text) {
+        try {
+            return askModel(number, theme, text, 0.0);
+        } catch (TransientAiException | JacksonException e) {
+            // the small model sometimes falls into a repetition loop (Ollama aborts it, or the JSON comes cut).
+            // At temperature 0 the loop repeats every time, so the single retry samples a little to escape it
+            return askModel(number, theme, text, RETRY_TEMPERATURE);
+        }
+    }
+
+    private ModelCompetencyAnswer askModel(int number, String theme, String text, double temperature) {
         return chatClient.prompt()
                 .system(s -> s.text(systemPrompt).param("rubric", rubrics.get(number - 1))) // general rules + this competency's rubric
                 .user(u -> u.text(userPrompt).param("theme", theme).param("text", text))
-                .options(OllamaChatOptions.builder().model(model))
+                .options(OllamaChatOptions.builder().model(model).numPredict(MAX_ANSWER_TOKENS).temperature(temperature))
                 .call()
                 .entity(ModelCompetencyAnswer.class, spec -> spec.useProviderStructuredOutput()); // Ollama is forced to answer in the record's JSON schema
     }
