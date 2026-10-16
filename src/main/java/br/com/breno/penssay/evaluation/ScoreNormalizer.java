@@ -1,7 +1,10 @@
 package br.com.breno.penssay.evaluation;
 
+import org.springframework.stereotype.Component;
+
 import java.util.List;
 
+@Component
 public class ScoreNormalizer {
 
     public int normalize(double score) {
