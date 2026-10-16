@@ -72,7 +72,8 @@ competências de 1 a 5, notas em {0, 40, 80, 120, 160, 200} e `totalScore` igual
 - [x] T014 [P] [US1] [B] Escrever `src/main/resources/prompts/evaluation-user.st` com as variáveis `{theme}` e `{text}`
 - [x] T015 [US1] [B] Implementar (refeito em 2026-10-16: 5 chamadas, uma por competência, research.md decisão 11) `EvaluationService.evaluate(String theme, String text)` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`: `ChatClient` com `.system(evaluation.st)`, `.user(u -> u.text(...).param("theme", ...).param("text", ...))`, modelo de `penssay.evaluation.model` via `OllamaChatOptions`, `.call().entity(ModelEvaluation.class, spec -> spec.useProviderStructuredOutput())`, e montagem do `EssayEvaluation` com o `ScoreNormalizer` (depende de T012–T014)
 - [x] T016 [US1] [B] Implementar `EvaluationController` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationController.java`: `@RestController`, `@RequestMapping("/api/evaluations")`, `@PostMapping` recebendo `@RequestBody EvaluationRequest` e delegando ao serviço (mesmo padrão do `TranscriptionController`)
-- [ ] T017 [US1] [B] Validar à mão o passo 2 do `quickstart.md` (caminho feliz com `samples/cartilha1.json`)
+- [x] T017 [US1] [B] Validar à mão o passo 2 do `quickstart.md` (caminho feliz com `samples/nota1000-etarismo.json`; feito em 2026-10-16, resultados em research.md, decisão 11)
+- [x] T042 [US1] [C] Evitar loops de repetição do modelo em `EvaluationService`: `numPredict=1024` só na correção e uma segunda tentativa por competência com `temperature=0.4` quando a primeira falha com `TransientAiException` ou `JacksonException` (research.md, 11.1). Sem teste ainda: coberto por T025
 
 **Checkpoint**: a História 1 funciona sozinha; MVP pronto para demo.
 
@@ -126,13 +127,13 @@ competência; conferir status e mensagem de cada caso (contrato, tabela "Erros")
 
 ### Testes da História 4
 
-- [ ] T025 [US4] [B guiado] Acrescentar ao `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java`: `ResourceAccessException` e `NonTransientAiException` vindas do cliente → `EvaluationUnavailableException`; exceção de conversão do Jackson 3 (`tools.jackson.core.JacksonException`, confirmar qual chega do `entity(...)`) → `EvaluationFormatException`
+- [ ] T025 [US4] [B guiado] Acrescentar ao `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java`: `ResourceAccessException` e `NonTransientAiException` vindas do cliente → `EvaluationUnavailableException` (sem segunda tentativa); `TransientAiException` (loop: `token repeat limit reached`) ou `tools.jackson.core.JacksonException` (JSON cortado) na 1ª tentativa e sucesso na 2ª → resposta normal, com a 2ª chamada usando `temperature=0.4`; falha nas duas → `EvaluationFormatException` (T042)
 - [ ] T026 [US4] [C, com explicação] Criar `EvaluationControllerTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationControllerTest.java` com `@WebMvcTest` e serviço mockado: caminho feliz 200; tema vazio → 400 "Informe o tema da redação."; texto só com espaços → 400 "Envie o texto da redação." (serviço não chamado); `EvaluationFormatException` → 502; `EvaluationUnavailableException` → 503
 
 ### Implementação da História 4
 
 - [ ] T027 [US4] [B] Validar tema e texto (nulo, vazio ou só espaços) em `EvaluationController`, lançando `InvalidRequestException` com as mensagens do contrato antes de chamar o serviço
-- [ ] T028 [US4] [B] Converter em `EvaluationService` as exceções do Spring AI: `ResourceAccessException` e `NonTransientAiException` → `EvaluationUnavailableException`; erro de conversão do JSON → `EvaluationFormatException` (o `ScoreNormalizer` já lança a dela para competências erradas)
+- [ ] T028 [US4] [B] Converter em `EvaluationService` as exceções do Spring AI: `ResourceAccessException` e `NonTransientAiException` → `EvaluationUnavailableException`; `TransientAiException` ou `JacksonException` que se repetem na segunda tentativa (T042) → `EvaluationFormatException` (o `ScoreNormalizer` já lança a dela para competências erradas)
 - [ ] T029 [US4] [B guiado] Implementar `ApiExceptionHandler` (`@RestControllerAdvice`) em `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`: `InvalidRequestException` → 400, `EvaluationFormatException` → 502, `EvaluationUnavailableException` → 503, sempre com `ErrorResponse` e as mensagens do contrato; nunca registrar o texto da redação em log (RF-014)
 - [ ] T030 [US4] [B] Validar à mão a tabela do passo 4 do `quickstart.md` (sem tema → 400; Ollama fechado → 503 em poucos segundos)
 
@@ -168,7 +169,7 @@ mesmo `ScoreNormalizer`; o modelo muda só por configuração.
 ## Fase 8: Acabamento e pontos transversais
 
 - [ ] T038 [B guiado] Adaptar a 001 ao handler compartilhado: validar a foto no `TranscriptionController` com `InvalidRequestException` e mapear a indisponibilidade da transcrição no `ApiExceptionHandler` (research.md, decisão 8) em `src/main/java/br/com/breno/penssay/transcription/` e `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`
-- [ ] T039 [P] [B] Medir estabilidade (3 correções da mesma redação, variação do total ≤ 80), sanity check (Cartilha ≥ 880; redação sem proposta com C5 ≤ 80) e tempo da 2ª chamada (≤ 60 s) e registrar em `docs/evaluation.md` (CS-003, CS-004, CS-006)
+- [ ] T039 [P] [B] Medir estabilidade (3 correções da mesma redação, variação do total ≤ 80), sanity check (nota 1000 ≥ 880; redação sem proposta com C5 ≤ 80) e tempo da 2ª chamada (≤ 60 s) e registrar em `docs/evaluation.md` (CS-003, CS-004, CS-006). Parcial em 2026-10-16 (research.md, 11.1): variação ≤ 80 ✅, nota 1000 = 760–840 ❌, tempo 37–57 s ✅; falta a redação sem proposta e passar para `docs/evaluation.md`
 - [ ] T040 [P] [C] Documentar `POST /api/evaluations`, `?mode=scores` e os erros no `README.md`
 - [ ] T041 [C] Rodar `./mvnw test` com o Ollama desligado e o `quickstart.md` inteiro; conferir que nenhum log contém texto de redação (RF-014)
 

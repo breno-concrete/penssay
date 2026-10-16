@@ -5,8 +5,9 @@
 - Ollama rodando, com `gemma3:4b` baixado.
 - `penssay.evaluation.model=gemma3:4b` e `spring.ai.retry.max-attempts=1` no
   `application.properties`.
-- Em `samples/` (git-ignored): pelo menos 1 redação nota 1000 da Cartilha do Participante
-  (INEP) e 1 redação fraca sem proposta de intervenção, como texto.
+- Em `samples/` (git-ignored): `nota1000-etarismo.json` (redação nota 1000) e
+  `nota740-r002.json` (redação nota 740, ENEM 2022, transcrita à mão a partir da foto
+  `nota740-r002.jpeg`). Para a História 3, falta 1 redação fraca sem proposta de intervenção.
 
 ## 1. Testes automatizados (sem modelo)
 
@@ -22,10 +23,10 @@ com o Ollama desligado inclusive.
 ```bash
 ./mvnw spring-boot:run
 curl -s -H "Content-Type: application/json" \
-  -d @samples/cartilha1.json localhost:8080/api/evaluations
+  -d @samples/nota1000-etarismo.json localhost:8080/api/evaluations
 ```
 
-`samples/cartilha1.json` contém `{"theme": "...", "text": "..."}`. Esperado: 5 competências de
+`samples/nota1000-etarismo.json` contém `{"theme": "...", "text": "..."}`. Esperado: 5 competências de
 1 a 5, notas em múltiplos de 40, `totalScore` igual à soma, justificativas e dicas em PT-BR.
 Ver [contrato](contracts/evaluations-api.md).
 
@@ -33,7 +34,7 @@ Ver [contrato](contracts/evaluations-api.md).
 
 ```bash
 curl -s -H "Content-Type: application/json" \
-  -d @samples/cartilha1.json "localhost:8080/api/evaluations?mode=scores"
+  -d @samples/nota1000-etarismo.json "localhost:8080/api/evaluations?mode=scores"
 ```
 
 Esperado: `scores` com 5 números e `totalScore`, sem justificativas.
