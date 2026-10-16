@@ -9,9 +9,12 @@
 Expor `POST /api/evaluations`, que recebe `{"theme", "text"}` e devolve as 5 competências em
 ordem (nota, justificativa, dicas), o total e o motivo de nota zero, quando houver. Um
 `EvaluationController` fino valida a entrada e delega ao `EvaluationService`. O serviço aplica
-a regra do texto curto (menos de 70 palavras) sem chamar o modelo, chama o modelo de correção do Ollama com a rubrica
-em `prompts/evaluation.st` e pede **saída estruturada** (JSON Schema enviado ao Ollama, que
-restringe a resposta do modelo ao formato). O `ScoreNormalizer`, escrito com TDD, valida as 5
+a regra das 70 palavras (`TOO_SHORT`) sem chamar o modelo, faz uma chamada de triagem (fuga total
+ao tema, texto não dissertativo) e depois **uma chamada por competência**: cada uma recebe as
+regras gerais de `prompts/evaluation.st` com a rubrica daquela competência
+(`prompts/competency-N.st`) e pede **saída estruturada** (JSON Schema enviado ao Ollama, que
+restringe a resposta do modelo ao formato). Se uma competência entrar em loop de repetição, o
+serviço tenta de novo uma vez com um pouco de amostragem (research.md, decisões 11 e 11.1). O `ScoreNormalizer`, escrito com TDD, valida as 5
 competências, arredonda para múltiplos de 40, limita a 0–200 e soma o total. O modo reduzido
 (`?mode=scores`) usa a mesma rubrica com um formato de saída só de notas, para o
 experimento 002.
@@ -37,7 +40,7 @@ dependência nova.
 
 **Metas de Desempenho**: correção completa em até 60 s com o modelo carregado (CS-006, a medir)
 
-**Restrições**: 100% local; `temperature=0`; modelo em `penssay.evaluation.model`; texto nunca
+**Restrições**: 100% local; `temperature=0` (0.4 só na segunda tentativa de uma competência em loop); `numPredict=1024` por resposta de correção; modelo em `penssay.evaluation.model`; texto nunca
 em log; retry do Spring AI reduzido para o 503 não demorar minutos (research.md, decisão 6)
 
 **Escala/Escopo**: um usuário por vez; uma redação por requisição

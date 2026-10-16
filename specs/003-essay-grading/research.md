@@ -36,6 +36,10 @@ restam itens "NEEDS CLARIFICATION".
 
 ## 3. Sinal de nota zero vindo do modelo
 
+> **Atualizada pela decisão 11**: os dois booleanos vêm de uma chamada de triagem separada
+> (`ModelScreening`, `prompts/screening.st`), feita antes das 5 correções, e não mais junto
+> com as notas. O resto da decisão continua valendo.
+
 - **Decisão**: o JSON do modelo tem dois booleanos, `fullyOffTopic` e `notArgumentative`. Se
   algum for `true`, o serviço zera todas as notas e preenche `zeroReason`.
 - **Por quê**: perguntas de sim/não são mais fáceis para um modelo pequeno do que escolher um

@@ -22,7 +22,7 @@ O aluno já revisou a transcrição da redação. Ele informa o tema e envia o t
 
 1. **Dado** um tema e o texto de uma redação, **Quando** o aluno pede a correção, **Então** recebe 5 competências numeradas de 1 a 5, cada uma com nota em {0, 40, 80, 120, 160, 200}, e o total.
 2. **Dado** que o modelo sugere uma nota fora dos valores permitidos (por exemplo 150 ou 230), **Quando** a nota é processada, **Então** o app a ajusta para o múltiplo de 40 mais próximo e a limita a 0–200, sem chamar o modelo de novo.
-3. **Dado** que o modelo informa um total, **Quando** a resposta é montada, **Então** o total devolvido é sempre a soma das cinco notas ajustadas, e o total do modelo é ignorado.
+3. **Dado** qualquer resposta do modelo, **Quando** a resposta é montada, **Então** o total devolvido é sempre a soma das cinco notas ajustadas, calculada pelo app; o modelo nunca informa total.
 
 ---
 
@@ -32,7 +32,7 @@ No ENEM, algumas situações zeram a redação inteira, não só uma competênci
 
 **Por que esta prioridade**: Uma redação que deveria tirar zero e recebe 600 engana o aluno no ponto mais grave. Também distorce a medição do experimento.
 
-**Teste Independente**: Pode ser testada enviando um texto com menos de 70 palavras e, separadamente, um texto fora do tema, e conferindo que ambos recebem zero em todas as competências.
+**Teste Independente**: Pode ser testada enviando um texto abaixo da regra das 70 palavras e, separadamente, um texto fora do tema, e conferindo que ambos recebem zero em todas as competências.
 
 **Cenários de Aceitação**:
 
@@ -70,7 +70,7 @@ Quando algo dá errado, o aluno recebe uma mensagem clara em português, e nunca
 
 1. **Dado** um pedido sem tema ou sem texto (vazio ou só espaços), **Quando** é enviado, **Então** o aluno recebe um erro de entrada inválida com mensagem em português, e o modelo não é chamado.
 2. **Dado** que o servidor de modelos está fora do ar ou o modelo não está instalado, **Quando** o aluno pede a correção, **Então** recebe um erro de serviço indisponível com mensagem em português.
-3. **Dado** que o modelo responde fora do formato esperado (faltou competência, nota que não é número, texto solto), **Quando** a resposta é processada, **Então** o aluno recebe um erro claro de falha na correção, e nenhuma nota é devolvida.
+3. **Dado** que o modelo responde fora do formato esperado (resposta cortada, loop de repetição que persiste após a segunda tentativa, nota que não é número), **Quando** a resposta é processada, **Então** o aluno recebe um erro claro de falha na correção, e nenhuma nota é devolvida.
 
 ---
 
@@ -95,11 +95,12 @@ O autor usa a mesma rubrica e o mesmo ajuste de notas para medir três modelos (
 - Nota exatamente no meio de dois valores permitidos (por exemplo 20, 60 ou 180): arredonda para cima (20 → 40, 180 → 200).
 - Nota negativa ou acima de 200: limitada a 0 ou 200.
 - Nota com casas decimais (por exemplo 152,5): arredonda para o múltiplo de 40 mais próximo, como qualquer outro número.
-- Competência repetida ou fora de ordem na resposta do modelo: o app reorganiza de 1 a 5 se as cinco estiverem presentes uma vez cada; se alguma faltar ou repetir com valores diferentes, é falha de formato.
+- Lista de competências inválida (faltando, repetida ou fora de 1 a 5): o app a rejeita como falha de formato; se estiver só fora de ordem, reorganiza de 1 a 5. Com uma chamada por competência, o número é dado pelo app, e essa validação fica como defesa.
 - Contagem de palavras: palavra é qualquer sequência de caracteres sem espaço; quebras de linha e linhas em branco não mudam a contagem; marcações da transcrição como `[illegible]` contam como uma palavra.
 - Texto colado em parágrafos (sem as quebras da folha): conta igual a um texto transcrito, porque a regra não depende das linhas.
+- Modelo entra em loop de repetição ou devolve a resposta cortada numa competência: o app tenta de novo uma única vez, com um pouco de amostragem; se falhar de novo, é falha na correção (erro claro, nenhuma nota).
 - Texto muito longo (muito acima das 30 linhas da folha oficial): é corrigido normalmente; o comprimento não zera a redação.
-- Modelo marca zero por fuga ao tema mas devolve notas diferentes de zero: o app zera tudo, porque a regra de zero prevalece.
+- Triagem indica fuga total ao tema ou texto não dissertativo: o app zera tudo e nem pede as notas das competências, porque a regra de zero prevalece.
 - Tema enviado não corresponde ao texto: o app não julga isso sozinho; é tarefa do modelo pela rubrica (fuga total ou parcial).
 - Justificativa que "cita" um trecho que não está na redação: é registrado como limitação conhecida e medido no teste de estabilidade, não bloqueia a resposta.
 
@@ -136,7 +137,7 @@ O autor usa a mesma rubrica e o mesmo ajuste de notas para medir três modelos (
 - **CS-001**: 100% das respostas bem-sucedidas têm 5 competências em ordem, notas só em {0, 40, 80, 120, 160, 200} e total igual à soma.
 - **CS-002**: Os testes do ajuste de notas cobrem 100% dos casos de arredondamento, empate, limites e soma, e passam sem nenhum modelo real.
 - **CS-003**: Estabilidade: a mesma redação corrigida 3 vezes tem variação do total de no máximo 80 pontos.
-- **CS-004**: Sanity check: as redações nota 1000 da Cartilha do Participante do INEP recebem total ≥ 880, e uma redação fraca sem proposta de intervenção recebe ≤ 80 em C5.
+- **CS-004**: Sanity check: redações nota 1000 (da Cartilha do Participante do INEP ou de bancos públicos) recebem total ≥ 880, e uma redação fraca sem proposta de intervenção recebe ≤ 80 em C5. Status em 2026-10-16: nota 1000 → 760–840 (não atingido; research.md, 11.1).
 - **CS-005**: 100% dos textos com menos de 70 palavras e dos pedidos sem tema ou sem texto são tratados conforme as regras (zero ou erro), sem nota inventada.
 - **CS-006**: Uma correção completa termina em até 60 segundos na máquina de desenvolvimento, com o modelo já carregado (meta inicial, a confirmar na primeira medição).
 - **CS-007**: Trocar o modelo de correção exige só mudar a configuração; nenhum arquivo de código é alterado.

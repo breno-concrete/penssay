@@ -111,7 +111,7 @@ proposta de intervenção; conferir que C1 cita o trecho, que C5 aponta a falta 
 que cada competência tem de 2 a 3 dicas.
 
 - [ ] T023 [US3] [B] Acrescentar a `evaluation.st` e aos `competency-N.st` as instruções de justificativa (curta, PT-BR, citando trechos reais da redação entre aspas) e de dicas (2 a 3, práticas; em C5, citar agente, ação, meio, finalidade e detalhamento quando faltarem)
-- [ ] T024 [US3] [B] Validar à mão com uma redação com desvio de norma culta e uma sem proposta de intervenção (cenários 2 e 3 da História 3) e anotar o resultado em `docs/evaluation.md`
+- [ ] T024 [US3] [B] Validar à mão com uma redação com desvio de norma culta e uma sem proposta de intervenção (cenários 2 e 3 da História 3), contar as dicas de cada competência (RF-007: 2 a 3) e anotar o resultado em `docs/evaluation.md`
 
 **Checkpoint**: as respostas completas explicam a nota.
 
