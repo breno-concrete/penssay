@@ -52,6 +52,13 @@ Na justificativa da competência 5, cite o trecho da redação que corresponde a
 - 40: proposta com um elemento ou vaga.
 - 0: sem proposta ou com proposta que desrespeita os direitos humanos.
 
+Campos da resposta, para cada competência:
+- number: o número da competência (1, 2, 3, 4 ou 5). Não é a nota.
+- justification: a justificativa.
+- score: a nota (0, 40, 80, 120, 160 ou 200).
+- tips: as dicas.
+Responda as cinco competências, cada uma uma única vez, em ordem de 1 a 5.
+
 Como corrigir:
 - Leia a redação inteira antes de dar qualquer nota.
 - Para cada competência, releia a redação inteira com foco só no que aquela competência avalia, sem deixar que a nota de uma influencie a de outra.
