@@ -29,9 +29,9 @@ Build-to-Learn" do `plan.md`.
 
 **Objetivo**: preparar a configuração e o pacote `web/` que a 001 e a 003 vão dividir.
 
-- [ ] T001 [C] Adicionar `spring.ai.retry.max-attempts=1` em `src/main/resources/application.properties` (research.md, decisão 6), mantendo `penssay.evaluation.model=gemma3:4b`
-- [ ] T002 [C] Mover `ErrorResponse` de `src/main/java/br/com/breno/penssay/transcription/ErrorResponse.java` para `src/main/java/br/com/breno/penssay/web/ErrorResponse.java` (pacote `br.com.breno.penssay.web`) e ajustar imports
-- [ ] T003 [P] [C] Criar `src/main/java/br/com/breno/penssay/web/InvalidRequestException.java` (`RuntimeException` com mensagem em PT-BR, mapeada para 400)
+- [x] T001 [C] Adicionar `spring.ai.retry.max-attempts=1` em `src/main/resources/application.properties` (research.md, decisão 6), mantendo `penssay.evaluation.model=gemma3:4b`
+- [x] T002 [C] Mover `ErrorResponse` de `src/main/java/br/com/breno/penssay/transcription/ErrorResponse.java` para `src/main/java/br/com/breno/penssay/web/ErrorResponse.java` (pacote `br.com.breno.penssay.web`) e ajustar imports
+- [x] T003 [P] [C] Criar `src/main/java/br/com/breno/penssay/web/InvalidRequestException.java` (`RuntimeException` com mensagem em PT-BR, mapeada para 400)
 
 ---
 
@@ -41,12 +41,12 @@ Build-to-Learn" do `plan.md`.
 
 **⚠️ CRÍTICO**: nenhuma história começa antes desta fase.
 
-- [ ] T004 [P] [C] Criar `record EvaluationRequest(String theme, String text)` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationRequest.java`
-- [ ] T005 [P] [C] Criar `enum ZeroReason { TOO_SHORT, OFF_TOPIC, NOT_ARGUMENTATIVE }` em `src/main/java/br/com/breno/penssay/evaluation/ZeroReason.java`
-- [ ] T006 [P] [C] Criar `record CompetencyEvaluation(int number, int score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/CompetencyEvaluation.java`
-- [ ] T007 [P] [C] Criar `record EssayEvaluation(List<CompetencyEvaluation> competencies, int totalScore, ZeroReason zeroReason)` em `src/main/java/br/com/breno/penssay/evaluation/EssayEvaluation.java`
-- [ ] T008 [P] [C] Criar `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)` e `record ModelCompetency(int number, double score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/ModelEvaluation.java` e `ModelCompetency.java` (sem campo de total: ele não existe no schema)
-- [ ] T009 [P] [C] Criar `EvaluationFormatException` (→ 502) e `EvaluationUnavailableException` (→ 503) em `src/main/java/br/com/breno/penssay/evaluation/EvaluationFormatException.java` e `EvaluationUnavailableException.java`
+- [x] T004 [P] [C] Criar `record EvaluationRequest(String theme, String text)` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationRequest.java`
+- [x] T005 [P] [C] Criar `enum ZeroReason { TOO_SHORT, OFF_TOPIC, NOT_ARGUMENTATIVE }` em `src/main/java/br/com/breno/penssay/evaluation/ZeroReason.java`
+- [x] T006 [P] [C] Criar `record CompetencyEvaluation(int number, int score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/CompetencyEvaluation.java`
+- [x] T007 [P] [C] Criar `record EssayEvaluation(List<CompetencyEvaluation> competencies, int totalScore, ZeroReason zeroReason)` em `src/main/java/br/com/breno/penssay/evaluation/EssayEvaluation.java`
+- [x] T008 [P] [C] Criar `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)` e `record ModelCompetency(int number, double score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/ModelEvaluation.java` e `ModelCompetency.java` (sem campo de total: ele não existe no schema)
+- [x] T009 [P] [C] Criar `EvaluationFormatException` (→ 502) e `EvaluationUnavailableException` (→ 503) em `src/main/java/br/com/breno/penssay/evaluation/EvaluationFormatException.java` e `EvaluationUnavailableException.java`
 
 **Checkpoint**: `./mvnw compile` passa; as histórias podem começar.
 
