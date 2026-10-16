@@ -40,8 +40,15 @@ restam itens "NEEDS CLARIFICATION".
   algum for `true`, o serviço zera todas as notas e preenche `zeroReason`.
 - **Por quê**: perguntas de sim/não são mais fáceis para um modelo pequeno do que escolher um
   valor de enum, e deixam a decisão final (zerar) no Java.
-- **Regra das 7 linhas**: o serviço conta as linhas não vazias do texto antes de chamar o
-  modelo; ≤ 7 → resposta com tudo zero e `zeroReason = TOO_SHORT`, sem chamada (RF-005).
+- **Regra do texto curto**: o serviço conta as palavras do texto (sequências separadas por
+  espaço em branco) antes de chamar o modelo; menos de 70 → resposta com tudo zero e
+  `zeroReason = TOO_SHORT`, sem chamada (RF-005).
+- **Por que palavras e não linhas** (mudança de 2026-10-16): o ENEM zera redações com 7
+  linhas ou menos, mas as linhas do texto não são as da folha. O modelo de transcrição pode
+  juntar linhas, o aluno pode editar, e um texto colado tem um parágrafo por linha (uma
+  redação nota 1000 com 4 parágrafos teria 4 linhas e seria zerada). Uma linha manuscrita
+  tem cerca de 10 palavras, então 70 palavras aproxima as 7 linhas sem depender das quebras.
+  Custo: é uma aproximação; um texto de 8 linhas com letra grande pode ficar abaixo de 70.
 
 ## 4. Prompt com tema e texto: `system` + `user` com parâmetros
 

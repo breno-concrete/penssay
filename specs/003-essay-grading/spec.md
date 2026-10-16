@@ -32,11 +32,11 @@ No ENEM, algumas situações zeram a redação inteira, não só uma competênci
 
 **Por que esta prioridade**: Uma redação que deveria tirar zero e recebe 600 engana o aluno no ponto mais grave. Também distorce a medição do experimento.
 
-**Teste Independente**: Pode ser testada enviando um texto de 7 linhas ou menos e, separadamente, um texto fora do tema, e conferindo que ambos recebem zero em todas as competências.
+**Teste Independente**: Pode ser testada enviando um texto com menos de 70 palavras e, separadamente, um texto fora do tema, e conferindo que ambos recebem zero em todas as competências.
 
 **Cenários de Aceitação**:
 
-1. **Dado** um texto com 7 linhas ou menos, **Quando** o aluno pede a correção, **Então** todas as competências e o total são zero, com o motivo explicado, e o app decide isso sem depender do modelo.
+1. **Dado** um texto com menos de 70 palavras, **Quando** o aluno pede a correção, **Então** todas as competências e o total são zero, com o motivo explicado, e o app decide isso sem depender do modelo.
 2. **Dado** um texto que foge totalmente ao tema ou que não é dissertativo-argumentativo, **Quando** o modelo indica essa situação, **Então** todas as competências e o total são zero e o motivo aparece na resposta.
 3. **Dado** um texto que só tangencia o tema (fuga parcial), **Quando** é corrigido, **Então** ele NÃO é zerado; a penalidade aparece nas notas das competências, como no ENEM.
 
@@ -96,7 +96,8 @@ O autor usa a mesma rubrica e o mesmo ajuste de notas para medir três modelos (
 - Nota negativa ou acima de 200: limitada a 0 ou 200.
 - Nota com casas decimais (por exemplo 152,5): arredonda para o múltiplo de 40 mais próximo, como qualquer outro número.
 - Competência repetida ou fora de ordem na resposta do modelo: o app reorganiza de 1 a 5 se as cinco estiverem presentes uma vez cada; se alguma faltar ou repetir com valores diferentes, é falha de formato.
-- Texto com linhas em branco: só linhas com algum texto contam para a regra das 7 linhas.
+- Contagem de palavras: palavra é qualquer sequência de caracteres sem espaço; quebras de linha e linhas em branco não mudam a contagem; marcações da transcrição como `[illegible]` contam como uma palavra.
+- Texto colado em parágrafos (sem as quebras da folha): conta igual a um texto transcrito, porque a regra não depende das linhas.
 - Texto muito longo (muito acima das 30 linhas da folha oficial): é corrigido normalmente; o comprimento não zera a redação.
 - Modelo marca zero por fuga ao tema mas devolve notas diferentes de zero: o app zera tudo, porque a regra de zero prevalece.
 - Tema enviado não corresponde ao texto: o app não julga isso sozinho; é tarefa do modelo pela rubrica (fuga total ou parcial).
@@ -110,7 +111,7 @@ O autor usa a mesma rubrica e o mesmo ajuste de notas para medir três modelos (
 - **RF-002**: A descrição das competências (rubrica oficial do ENEM: C1 norma culta; C2 compreensão do tema e tipo dissertativo-argumentativo, com repertório; C3 seleção, relação e organização de argumentos; C4 mecanismos de coesão; C5 proposta de intervenção com agente, ação, meio, finalidade e detalhamento, respeitando os direitos humanos) DEVE ficar em arquivo de instruções do modelo, nunca escrita no código.
 - **RF-003**: Cada nota DEVE ser ajustada pelo app para o múltiplo de 40 mais próximo (empate arredonda para cima) e limitada a 0–200; o total DEVE ser a soma das cinco notas ajustadas. Nenhum total ou conta vinda do modelo é usado.
 - **RF-004**: O ajuste de notas DEVE ter testes automatizados cobrindo arredondamento, empate, limites (negativo, acima de 200) e soma do total.
-- **RF-005**: Um texto com 7 linhas não vazias ou menos DEVE receber zero em todas as competências, decidido pelo app sem chamar o modelo.
+- **RF-005**: Um texto com menos de 70 palavras DEVE receber zero em todas as competências, decidido pelo app sem chamar o modelo. O limite aproxima a regra oficial do ENEM (7 linhas ou menos), já que uma linha manuscrita tem cerca de 10 palavras.
 - **RF-006**: Quando o modelo indicar fuga total ao tema ou texto não dissertativo-argumentativo, o app DEVE zerar todas as competências e o total, mesmo que o modelo tenha dado outras notas, e informar o motivo.
 - **RF-007**: No formato completo, cada competência DEVE trazer uma justificativa curta em português e de 2 a 3 dicas práticas.
 - **RF-008**: O sistema DEVE oferecer um formato reduzido que devolve só as cinco notas ajustadas e o total, usando a mesma rubrica e o mesmo ajuste do formato completo.
@@ -136,14 +137,14 @@ O autor usa a mesma rubrica e o mesmo ajuste de notas para medir três modelos (
 - **CS-002**: Os testes do ajuste de notas cobrem 100% dos casos de arredondamento, empate, limites e soma, e passam sem nenhum modelo real.
 - **CS-003**: Estabilidade: a mesma redação corrigida 3 vezes tem variação do total de no máximo 80 pontos.
 - **CS-004**: Sanity check: as redações nota 1000 da Cartilha do Participante do INEP recebem total ≥ 880, e uma redação fraca sem proposta de intervenção recebe ≤ 80 em C5.
-- **CS-005**: 100% dos textos com 7 linhas ou menos e dos pedidos sem tema ou sem texto são tratados conforme as regras (zero ou erro), sem nota inventada.
+- **CS-005**: 100% dos textos com menos de 70 palavras e dos pedidos sem tema ou sem texto são tratados conforme as regras (zero ou erro), sem nota inventada.
 - **CS-006**: Uma correção completa termina em até 60 segundos na máquina de desenvolvimento, com o modelo já carregado (meta inicial, a confirmar na primeira medição).
 - **CS-007**: Trocar o modelo de correção exige só mudar a configuração; nenhum arquivo de código é alterado.
 - **CS-008**: O experimento 002 consegue medir pelo menos dois modelos usando o formato reduzido, com a mesma rubrica e o mesmo ajuste de notas.
 
 ## Premissas
 
-- O texto recebido já foi revisado pelo aluno após a transcrição e mantém as quebras de linha da folha (a transcrição é feita linha por linha), o que permite aplicar a regra das 7 linhas.
+- O texto recebido já foi revisado pelo aluno após a transcrição. As quebras de linha podem não ser as da folha (o modelo pode juntar linhas, o aluno pode editar ou colar o texto em parágrafos); por isso a regra do texto curto conta palavras, não linhas.
 - O empate no arredondamento (nota no meio de dois múltiplos de 40) vai para cima; o ENEM não define essa regra porque o corretor humano só atribui valores permitidos.
 - A rubrica é uma versão resumida dos critérios oficiais do INEP; a Cartilha do Participante é a referência, mas seus textos e redações não são copiados para o repositório.
 - A justificativa e as dicas são geradas pelo modelo e não passam por verificação automática; a qualidade delas é avaliada por amostragem, não por teste.

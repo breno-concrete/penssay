@@ -32,6 +32,6 @@
 ## Notes
 
 - Endpoint, status HTTP, nomes de classe e formato JSON ficam para o `/speckit-plan` (o README já descreve `POST /api/evaluations`).
-- Decisões tomadas por padrão razoável, ajustáveis no `/speckit-clarify`: empate no arredondamento vai para cima; formato reduzido (só notas) para o experimento 002; regra das 7 linhas decidida pelo app; meta de 60 s (CS-006) é estimativa.
+- Decisões tomadas por padrão razoável, ajustáveis no `/speckit-clarify`: empate no arredondamento vai para cima; formato reduzido (só notas) para o experimento 002; regra do texto curto decidida pelo app (trocada de 7 linhas para menos de 70 palavras em 2026-10-16); meta de 60 s (CS-006) é estimativa.
 - "Gemma de ~4B" e "Cartilha do INEP" aparecem porque fazem parte do objetivo (categoria Best Use of Gemma e sanity check do README).
 - Pronto para `/speckit-clarify` (opcional) ou `/speckit-plan`.

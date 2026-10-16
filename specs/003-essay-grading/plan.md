@@ -9,7 +9,7 @@
 Expor `POST /api/evaluations`, que recebe `{"theme", "text"}` e devolve as 5 competências em
 ordem (nota, justificativa, dicas), o total e o motivo de nota zero, quando houver. Um
 `EvaluationController` fino valida a entrada e delega ao `EvaluationService`. O serviço aplica
-a regra das 7 linhas sem chamar o modelo, chama o modelo de correção do Ollama com a rubrica
+a regra do texto curto (menos de 70 palavras) sem chamar o modelo, chama o modelo de correção do Ollama com a rubrica
 em `prompts/evaluation.st` e pede **saída estruturada** (JSON Schema enviado ao Ollama, que
 restringe a resposta do modelo ao formato). O `ScoreNormalizer`, escrito com TDD, valida as 5
 competências, arredonda para múltiplos de 40, limita a 0–200 e soma o total. O modo reduzido
@@ -80,7 +80,7 @@ specs/003-essay-grading/
 src/main/java/br/com/breno/penssay/
 ├── evaluation/
 │   ├── EvaluationController.java      # valida tema/texto, lê ?mode, delega
-│   ├── EvaluationService.java         # regra das 7 linhas, chamada ao modelo, monta a resposta
+│   ├── EvaluationService.java         # regra das 70 palavras, chamada ao modelo, monta a resposta
 │   ├── ScoreNormalizer.java           # valida 5 competências, arredonda, limita, soma (TDD)
 │   ├── EvaluationRequest.java         # record(theme, text)
 │   ├── EssayEvaluation.java           # record da resposta completa
@@ -104,7 +104,7 @@ src/main/resources/
 
 src/test/java/br/com/breno/penssay/evaluation/
 ├── ScoreNormalizerTest.java           # TDD, cobertura total
-├── EvaluationServiceTest.java         # Mockito: ChatClient mockado; 7 linhas não chama o modelo
+├── EvaluationServiceTest.java         # Mockito: ChatClient mockado; < 70 palavras não chama o modelo
 └── EvaluationControllerTest.java      # @WebMvcTest: 400, 502, 503, caminho feliz
 
 docs/evaluation.md                     # estabilidade (3x) e sanity check (Cartilha INEP)

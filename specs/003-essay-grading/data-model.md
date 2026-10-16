@@ -9,7 +9,7 @@ Não há persistência (constituição, princípio III). Tudo vive em memória d
 | Campo | Regra |
 |---|---|
 | `theme` | Obrigatório; não vazio nem só espaços |
-| `text` | Obrigatório; não vazio nem só espaços; mantém as quebras de linha da folha |
+| `text` | Obrigatório; não vazio nem só espaços; as quebras de linha não importam |
 
 Parâmetro de consulta `mode`: ausente = completo; `scores` = reduzido; outro valor = 400.
 
@@ -52,7 +52,7 @@ O modelo **não** devolve total: ele nem existe no schema.
 
 | Valor | Quem decide | Quando |
 |---|---|---|
-| `TOO_SHORT` | App, sem chamar o modelo | 7 linhas não vazias ou menos |
+| `TOO_SHORT` | App, sem chamar o modelo | Menos de 70 palavras |
 | `OFF_TOPIC` | Modelo (`fullyOffTopic`) | Fuga total ao tema |
 | `NOT_ARGUMENTATIVE` | Modelo (`notArgumentative`) | Texto não dissertativo-argumentativo |
 

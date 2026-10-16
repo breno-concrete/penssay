@@ -7,7 +7,7 @@
 ```json
 {
   "theme": "Desafios para a valorização de comunidades e povos tradicionais no Brasil",
-  "text": "Texto completo da redação, já revisado pelo aluno,\ncom as quebras de linha da folha."
+  "text": "Texto completo da redação, já revisado pelo aluno.\nAs quebras de linha são livres."
 }
 ```
 
@@ -57,7 +57,7 @@ Parâmetro opcional: `?mode=scores` (formato reduzido, usado pelo experimento 00
 }
 ```
 
-Valores de `zeroReason`: `TOO_SHORT` (7 linhas ou menos), `OFF_TOPIC` (fuga total ao tema),
+Valores de `zeroReason`: `TOO_SHORT` (menos de 70 palavras), `OFF_TOPIC` (fuga total ao tema),
 `NOT_ARGUMENTATIVE` (não é dissertativo-argumentativo). Com `TOO_SHORT`, o modelo não é
 chamado, e as justificativas explicam o motivo.
 

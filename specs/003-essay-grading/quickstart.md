@@ -42,7 +42,7 @@ Esperado: `scores` com 5 números e `totalScore`, sem justificativas.
 
 | Cenário | Como provocar | Esperado |
 |---|---|---|
-| Texto curto | `text` com 5 linhas | 200, tudo zero, `zeroReason: "TOO_SHORT"`, resposta imediata |
+| Texto curto | `text` com 30 palavras | 200, tudo zero, `zeroReason: "TOO_SHORT"`, resposta imediata |
 | Sem tema | `theme: ""` | 400, "Informe o tema da redação." |
 | Ollama fora | Fechar o Ollama e repetir o passo 2 | 503 em poucos segundos (não minutos) |
 

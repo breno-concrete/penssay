@@ -57,7 +57,7 @@ Build-to-Learn" do `plan.md`.
 **Objetivo**: `POST /api/evaluations` devolve 5 competências em ordem, notas em múltiplos de
 40 e o total calculado pelo app.
 
-**Teste independente**: enviar tema e texto de uma redação (mais de 7 linhas) e conferir 5
+**Teste independente**: enviar tema e texto de uma redação (70 palavras ou mais) e conferir 5
 competências de 1 a 5, notas em {0, 40, 80, 120, 160, 200} e `totalScore` igual à soma.
 
 ### Testes da História 1 (TDD: escrever primeiro e ver falhar)
@@ -80,7 +80,7 @@ competências de 1 a 5, notas em {0, 40, 80, 120, 160, 200} e `totalScore` igual
 
 ## Fase 4: História 2 - Aplicar as regras de nota zero (Prioridade: P1)
 
-**Objetivo**: texto com 7 linhas não vazias ou menos zera tudo sem chamar o modelo; fuga
+**Objetivo**: texto com menos de 70 palavras zera tudo sem chamar o modelo; fuga
 total ao tema ou texto não dissertativo zera tudo pela indicação do modelo.
 
 **Teste independente**: enviar um texto de 5 linhas e outro fora do tema; ambos voltam com
@@ -88,12 +88,12 @@ todas as notas e o total em zero e com `zeroReason` preenchido.
 
 ### Testes da História 2
 
-- [ ] T018 [US2] [B guiado] Criar `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java` com `ChatClient` mockado: texto com ≤ 7 linhas não vazias (linhas em branco não contam) → tudo zero, `TOO_SHORT` e `verifyNoInteractions` no cliente; texto com 8 linhas → o modelo é chamado
+- [ ] T018 [US2] [B guiado] Criar `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java` com `ChatClient` mockado: texto com 69 palavras (espalhadas em várias linhas, com linhas em branco) → tudo zero, `TOO_SHORT` e `verifyNoInteractions` no cliente; texto com 70 palavras numa linha só → o modelo é chamado
 - [ ] T019 [US2] [B guiado] Acrescentar ao `EvaluationServiceTest`: modelo com `fullyOffTopic=true` e notas altas → tudo zero e `OFF_TOPIC`; `notArgumentative=true` → `NOT_ARGUMENTATIVE`; os dois `true` → `OFF_TOPIC`
 
 ### Implementação da História 2
 
-- [ ] T020 [US2] [B] Implementar a regra das 7 linhas no início de `EvaluationService.evaluate` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`, devolvendo 5 competências com nota 0, justificativa explicando o motivo e `zeroReason = TOO_SHORT`, sem chamar o modelo
+- [ ] T020 [US2] [B] Implementar a regra das 70 palavras no início de `EvaluationService.evaluate` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`, devolvendo 5 competências com nota 0, justificativa explicando o motivo e `zeroReason = TOO_SHORT`, sem chamar o modelo
 - [ ] T021 [US2] [B] Implementar em `EvaluationService` a leitura de `fullyOffTopic` e `notArgumentative`: zerar todas as notas e o total e preencher `zeroReason` (`OFF_TOPIC` tem prioridade)
 - [ ] T022 [US2] [B] Acrescentar a `src/main/resources/prompts/evaluation.st` as regras de fuga total (marcar `fullyOffTopic`), texto não dissertativo (marcar `notArgumentative`) e fuga parcial (NÃO zera; penaliza C2 e C3)
 
@@ -151,13 +151,13 @@ mesmo `ScoreNormalizer`; o modelo muda só por configuração.
 ### Testes da História 5
 
 - [ ] T031 [US5] [C, com explicação] Acrescentar ao `EvaluationControllerTest`: `?mode=scores` → 200 com `scores` e `totalScore`; `?mode=xyz` → 400 "Modo de correção inválido. Use mode=scores ou não envie o parâmetro."
-- [ ] T032 [US5] [B guiado] Acrescentar ao `EvaluationServiceTest`: o modo reduzido usa os mesmos `evaluation.st` e `evaluation-user.st` e normaliza as notas pela mesma regra; com ≤ 7 linhas também não chama o modelo
+- [ ] T032 [US5] [B guiado] Acrescentar ao `EvaluationServiceTest`: o modo reduzido usa os mesmos `evaluation.st` e `evaluation-user.st` e normaliza as notas pela mesma regra; com menos de 70 palavras também não chama o modelo
 
 ### Implementação da História 5
 
 - [ ] T033 [P] [US5] [C] Criar `record ModelScores(boolean fullyOffTopic, boolean notArgumentative, List<ModelScore> competencies)` e `record ModelScore(int number, double score)` em `src/main/java/br/com/breno/penssay/evaluation/ModelScores.java` e `ModelScore.java`
 - [ ] T034 [P] [US5] [C] Criar `record EssayScores(List<Integer> scores, int totalScore, ZeroReason zeroReason)` em `src/main/java/br/com/breno/penssay/evaluation/EssayScores.java`
-- [ ] T035 [US5] [B] Implementar `EvaluationService.evaluateScores(String theme, String text)` reaproveitando os mesmos prompts, a regra das 7 linhas, a regra de zero e o `ScoreNormalizer`; só muda a classe passada a `entity(...)` (`ModelScores`)
+- [ ] T035 [US5] [B] Implementar `EvaluationService.evaluateScores(String theme, String text)` reaproveitando os mesmos prompts, a regra das 70 palavras, a regra de zero e o `ScoreNormalizer`; só muda a classe passada a `entity(...)` (`ModelScores`)
 - [ ] T036 [US5] [B] Ler `@RequestParam(required = false) String mode` em `EvaluationController`: ausente → completo; `scores` → reduzido; outro valor → `InvalidRequestException`
 - [ ] T037 [US5] [B] Validar à mão o passo 3 do `quickstart.md` e a troca de modelo só por `application.properties` (CS-007)
 
