@@ -45,7 +45,7 @@ Build-to-Learn" do `plan.md`.
 - [x] T005 [P] [C] Criar `enum ZeroReason { TOO_SHORT, OFF_TOPIC, NOT_ARGUMENTATIVE }` em `src/main/java/br/com/breno/penssay/evaluation/ZeroReason.java`
 - [x] T006 [P] [C] Criar `record CompetencyEvaluation(int number, int score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/CompetencyEvaluation.java`
 - [x] T007 [P] [C] Criar `record EssayEvaluation(List<CompetencyEvaluation> competencies, int totalScore, ZeroReason zeroReason)` em `src/main/java/br/com/breno/penssay/evaluation/EssayEvaluation.java`
-- [x] T008 [P] [C] Criar `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)` e `record ModelCompetency(int number, double score, String justification, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/ModelEvaluation.java` e `ModelCompetency.java` (sem campo de total: ele não existe no schema)
+- [x] T008 [P] [C] Criar `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)` e `record ModelCompetency(int number, String justification, double score, List<String> tips)` em `src/main/java/br/com/breno/penssay/evaluation/ModelEvaluation.java` e `ModelCompetency.java` (sem campo de total: ele não existe no schema)
 - [x] T009 [P] [C] Criar `EvaluationFormatException` (→ 502) e `EvaluationUnavailableException` (→ 503) em `src/main/java/br/com/breno/penssay/evaluation/EvaluationFormatException.java` e `EvaluationUnavailableException.java`
 
 **Checkpoint**: `./mvnw compile` passa; as histórias podem começar.

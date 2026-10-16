@@ -17,7 +17,7 @@ Parâmetro de consulta `mode`: ausente = completo; `scores` = reduzido; outro va
 
 ### `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)`
 
-### `record ModelCompetency(int number, double score, String justification, List<String> tips)`
+### `record ModelCompetency(int number, String justification, double score, List<String> tips)`
 
 ### `record ModelScores(boolean fullyOffTopic, boolean notArgumentative, List<ModelScore> competencies)`
 

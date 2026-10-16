@@ -132,6 +132,6 @@ public class ScoreNormalizerTest {
 
 
     private ModelCompetency competency(int number, double score) {
-        return new ModelCompetency(number, score, "qualquer", List.of());
+        return new ModelCompetency(number, "qualquer", score, List.of());
     }
 }
