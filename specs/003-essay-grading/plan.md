@@ -87,8 +87,9 @@ src/main/java/br/com/breno/penssay/
 │   ├── CompetencyEvaluation.java      # record(number, score, justification, tips)
 │   ├── EssayScores.java               # record da resposta reduzida (só notas)
 │   ├── ZeroReason.java                # enum TOO_SHORT, OFF_TOPIC, NOT_ARGUMENTATIVE (só na API)
-│   ├── ModelEvaluation.java           # record do JSON que o modelo devolve (formato completo)
-│   ├── ModelScores.java               # record do JSON que o modelo devolve (formato reduzido)
+│   ├── ModelScreening.java            # resposta da triagem (fuga ao tema, não dissertativo)
+│   ├── ModelCompetencyAnswer.java     # resposta de uma competência (formato completo)
+│   ├── ModelCompetencyScore.java      # resposta de uma competência (formato reduzido)
 │   ├── EvaluationFormatException.java       # resposta do modelo inválida → 502
 │   └── EvaluationUnavailableException.java  # Ollama fora / modelo ausente → 503
 └── web/
@@ -99,7 +100,9 @@ src/main/java/br/com/breno/penssay/
 src/main/resources/
 ├── application.properties             # + spring.ai.retry.max-attempts
 └── prompts/
-    ├── evaluation.st                  # system: rubrica C1–C5 + regras de zero (PT-BR)
+    ├── evaluation.st                  # system: regras gerais + {rubric} (PT-BR)
+    ├── competency-1.st … competency-5.st # rubrica de cada competência, uma chamada por competência
+    ├── screening.st                   # triagem: fuga total ao tema, texto não dissertativo (US2)
     └── evaluation-user.st             # user: tema e redação via {theme} e {text}
 
 src/test/java/br/com/breno/penssay/evaluation/

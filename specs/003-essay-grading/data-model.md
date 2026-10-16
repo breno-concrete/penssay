@@ -15,13 +15,22 @@ Parâmetro de consulta `mode`: ausente = completo; `scores` = reduzido; outro va
 
 ## O que o modelo devolve (JSON Schema gerado a partir destes records)
 
-### `record ModelEvaluation(boolean fullyOffTopic, boolean notArgumentative, List<ModelCompetency> competencies)`
+Uma chamada por competência (research.md, decisão 11), mais uma chamada de triagem antes delas.
+
+### `record ModelScreening(boolean fullyOffTopic, boolean notArgumentative)`
+
+Resposta da triagem (US2). Se algum for `true`, as cinco chamadas de correção nem acontecem.
+
+### `record ModelCompetencyAnswer(String justification, double score, List<String> tips)`
+
+Resposta de uma chamada de correção. Não tem `number`: o serviço sabe qual competência pediu.
+A justificativa vem antes da nota para o modelo raciocinar antes de escolher o número.
+
+### `record ModelCompetencyScore(double score)` (modo reduzido)
 
 ### `record ModelCompetency(int number, String justification, double score, List<String> tips)`
 
-### `record ModelScores(boolean fullyOffTopic, boolean notArgumentative, List<ModelScore> competencies)`
-
-### `record ModelScore(int number, double score)`
+Montado pelo serviço (número + resposta) e entregue ao `ScoreNormalizer`. Não vai ao modelo.
 
 O modelo **não** devolve total: ele nem existe no schema.
 

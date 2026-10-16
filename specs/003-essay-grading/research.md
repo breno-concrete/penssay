@@ -26,9 +26,9 @@ restam itens "NEEDS CLARIFICATION".
 
 ## 2. Formato completo e formato reduzido com a mesma rubrica
 
-- **Decisão**: o mesmo `system` (`evaluation.st`) e o mesmo `user` (`evaluation-user.st`); só
-  muda a classe passada para `entity(...)`: `ModelEvaluation` (notas + justificativa + dicas) ou
-  `ModelScores` (só notas). O schema muda, a rubrica não.
+- **Decisão**: os mesmos prompts (`evaluation.st` + `competency-N.st` e `evaluation-user.st`);
+  só muda a classe passada para `entity(...)`: `ModelCompetencyAnswer` (nota + justificativa +
+  dicas) ou `ModelCompetencyScore` (só nota). O schema muda, a rubrica não.
 - **Base**: atende RF-008 e RF-004 do experimento 002 (mesmas instruções de correção).
 - **API**: `POST /api/evaluations?mode=scores`; sem o parâmetro, formato completo.
 - **Alternativa**: dois arquivos de prompt (completo e reduzido). Rejeitada: as rubricas
@@ -106,7 +106,7 @@ restam itens "NEEDS CLARIFICATION".
 
 - **Gemma (local)**: medido pela própria API, `POST /api/evaluations?mode=scores`.
 - **Qwen base e Qwen ajustado (Tinker)**: o script do experimento lê os mesmos
-  `evaluation.st` e `evaluation-user.st`, envia ao Tinker com o JSON Schema de `ModelScores` e
+  `evaluation.st`, `competency-N.st` e `evaluation-user.st`, envia ao Tinker com o JSON Schema de `ModelCompetencyScore` e
   normaliza com uma cópia em Python da regra do `ScoreNormalizer`. A cópia é validada contra os
   mesmos casos do `ScoreNormalizerTest`, listados no `data-model.md`.
 - **Por quê**: o Tinker não roda no Ollama, então o modelo ajustado não passa pelo app Java.
@@ -120,3 +120,31 @@ restam itens "NEEDS CLARIFICATION".
 - **Sanity check**: redações nota 1000 da Cartilha do Participante (INEP), copiadas à mão para
   `samples/` (git-ignored, não redistribuídas): total ≥ 880. Uma redação fraca sem proposta de
   intervenção: C5 ≤ 80 (CS-004).
+
+## 11. Uma chamada por competência (mudança de 2026-10-16)
+
+- **Decisão**: o serviço faz 5 chamadas ao modelo, uma por competência. Cada chamada recebe a
+  parte geral (`evaluation.st`, com a variável `{rubric}`), a rubrica só daquela competência
+  (`competency-1.st` a `competency-5.st`) e o tema e a redação. O modelo devolve
+  `ModelCompetencyAnswer` (justificativa, nota, dicas), sem número; o serviço monta a
+  `List<ModelCompetency>` e o `ScoreNormalizer` segue igual.
+- **Medição** (redação nota 1000, tema do envelhecimento populacional, `gemma3:4b`):
+
+  | Versão | C1–C5 | Total | Variação entre rodadas |
+  |---|---|---|---|
+  | 1 chamada, nota antes da justificativa | 160, 120, 160, 120, 80 | 640 | (1 rodada) |
+  | 1 chamada, justificativa antes da nota | 160–160, …, 160–40 | 560 a 800 | 240 |
+  | 5 chamadas | 160, 160, 160, 120, 200 | 800 | 0 (3 rodadas) |
+  | 5 chamadas + C4 lista os recursos coesivos | 160, 160, 160, 160, 200 | 840 | 0 (2 rodadas) |
+
+- **Achados**: (1) com uma chamada só, o modelo de 4B trocava a nota pelo número da
+  competência, dava notas que contradiziam a própria justificativa e às vezes listava a escala
+  (160, 120, 80, 40) em vez de avaliar; (2) pedir para listar e contar evidências antes da nota
+  funcionou na C5 (cinco elementos) e na C4 (conectivos), mas piorou a C1 e a C2 (o modelo
+  passou a criticar estilo como se fosse desvio), então essas mudanças foram desfeitas;
+  (3) a C4 tinha "no entanto" como exemplo na rubrica, e o modelo afirmou que a redação usava
+  "no entanto" (não usava): exemplos concretos na rubrica viram falsas evidências.
+- **Custo**: ~37 s por correção (5 chamadas) contra ~25 s com uma chamada. Cabe no CS-006.
+- **Alternativa**: modelo maior (`qwen2.5vl:7b`). Não testada ainda; com 6 GB de VRAM parte
+  dele roda na CPU, e deixa de ser Gemma.
+
