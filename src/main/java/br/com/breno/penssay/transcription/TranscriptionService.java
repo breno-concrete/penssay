@@ -1,7 +1,7 @@
 package br.com.breno.penssay.transcription;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -11,6 +11,9 @@ import org.springframework.util.MimeTypeUtils;
 
 @Service
 public class TranscriptionService {
+
+    // an ENEM essay has at most 30 lines (~500 words); the cap stops a looping answer from burning credits
+    private static final int MAX_TRANSCRIPTION_TOKENS = 2048;
 
     private final ChatClient chatClient;
     private final Resource prompt;
@@ -33,7 +36,7 @@ public class TranscriptionService {
 
         return chatClient.prompt()
                 .user(u -> u.text(prompt).media(mimeType, image)) // o que será enviado (imagem + texto)
-                .options(OllamaChatOptions.builder().model(model)) // qual modelo será usado
+                .options(ChatOptions.builder().model(model).maxTokens(MAX_TRANSCRIPTION_TOKENS)) // qual modelo será usado
                 .call() // esperar a resposta do modelo
                 .content(); //devolve ums String que será o texto da resposta
 
