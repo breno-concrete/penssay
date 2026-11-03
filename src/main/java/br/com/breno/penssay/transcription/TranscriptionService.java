@@ -1,5 +1,7 @@
 package br.com.breno.penssay.transcription;
 
+import com.openai.errors.OpenAIInvalidDataException;
+import com.openai.errors.OpenAIIoException;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,15 @@ public class TranscriptionService {
 
         MimeType mimeType = MimeTypeUtils.parseMimeType(contentType);
 
+        try {
+            return askModel(mimeType, image);
+        } catch (OpenAIInvalidDataException | OpenAIIoException e) {
+            // the provider sometimes resets the connection mid-answer; one more try usually goes through
+            return askModel(mimeType, image);
+        }
+    }
+
+    private String askModel(MimeType mimeType, Resource image) {
         return chatClient.prompt()
                 .user(u -> u.text(prompt).media(mimeType, image)) // o que será enviado (imagem + texto)
                 .options(ChatOptions.builder().model(model).maxTokens(MAX_TRANSCRIPTION_TOKENS)) // qual modelo será usado

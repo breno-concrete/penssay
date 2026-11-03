@@ -1,5 +1,7 @@
 package br.com.breno.penssay.evaluation;
 
+import com.openai.errors.OpenAIInvalidDataException;
+import com.openai.errors.OpenAIIoException;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,9 +66,10 @@ public class EvaluationService {
     private ModelCompetencyAnswer evaluateCompetency(int number, String theme, String text) {
         try {
             return askModel(number, theme, text, 0.0);
-        } catch (JacksonException e) {
-            // the model sometimes falls into a repetition loop (the answer hits the token cap and the JSON comes cut).
-            // At temperature 0 the loop repeats every time, so the single retry samples a little to escape it
+        } catch (JacksonException | OpenAIInvalidDataException | OpenAIIoException e) {
+            // two failures are worth one more try: the model falls into a repetition loop (the answer hits the token
+            // cap and the JSON comes cut), or the provider resets the connection mid-answer.
+            // At temperature 0 a loop repeats every time, so the single retry samples a little to escape it
             return askModel(number, theme, text, RETRY_TEMPERATURE);
         }
     }
