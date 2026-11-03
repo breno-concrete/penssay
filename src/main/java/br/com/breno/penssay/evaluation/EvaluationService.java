@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 public class EvaluationService {
@@ -51,16 +55,39 @@ public class EvaluationService {
     }
 
     public EssayEvaluation evaluate(String theme, String text) {
-        // one call per competency: a small model grades one rubric at a time much more consistently than all five at once
+        // one call per competency: a model grades one rubric at a time much more consistently than all five at once.
+        // The five calls are independent, so they run at the same time and the essay takes as long as the slowest one
         List<ModelCompetency> answers = new ArrayList<>();
-        for (int number = 1; number <= COMPETENCY_COUNT; number++) {
-            ModelCompetencyAnswer answer = evaluateCompetency(number, theme, text);
-            answers.add(new ModelCompetency(number, answer.justification(), answer.score(), answer.tips()));
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<ModelCompetencyAnswer>> pending = new ArrayList<>();
+            for (int number = 1; number <= COMPETENCY_COUNT; number++) {
+                int competency = number;
+                pending.add(executor.submit(() -> evaluateCompetency(competency, theme, text)));
+            }
+            for (int number = 1; number <= COMPETENCY_COUNT; number++) {
+                ModelCompetencyAnswer answer = await(pending.get(number - 1));
+                answers.add(new ModelCompetency(number, answer.justification(), answer.score(), answer.tips()));
+            }
         }
 
         List<CompetencyEvaluation> competencies = scoreNormalizer.normalizeAll(answers);
 
         return new EssayEvaluation(competencies, scoreNormalizer.total(competencies), null);
+    }
+
+    // rethrows what the competency call threw, so callers see the same exceptions as with a sequential call
+    private static ModelCompetencyAnswer await(Future<ModelCompetencyAnswer> answer) {
+        try {
+            return answer.get();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException cause) {
+                throw cause;
+            }
+            throw new IllegalStateException(e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while grading the essay", e);
+        }
     }
 
     private ModelCompetencyAnswer evaluateCompetency(int number, String theme, String text) {
