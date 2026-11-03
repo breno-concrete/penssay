@@ -46,7 +46,8 @@ def main():
 
     rows = []  # one per graded essay: id, human, model, seconds
     failures = 0
-    for index, path in enumerate(files, start=1):
+    for path in files:
+        essay_id = path.stem  # neutral code such as r01 or m03, never a name
         essay = json.loads(path.read_text(encoding="utf-8"))
         human = essay["human"]
         for run in range(1, args.runs + 1):
@@ -55,11 +56,11 @@ def main():
                 model = grade(essay["theme"], essay["text"])
             except (urllib.error.URLError, TimeoutError, KeyError) as e:
                 failures += 1
-                print(f"essay {index:02d} run {run}: FAILED ({type(e).__name__})")
+                print(f"{essay_id} run {run}: FAILED ({type(e).__name__})")
                 continue
             seconds = time.time() - started
-            rows.append({"id": index, "run": run, "human": human, "model": model, "seconds": round(seconds, 1)})
-            print(f"essay {index:02d} run {run}: human {sum(human):4d}  model {sum(model):4d}  "
+            rows.append({"id": essay_id, "run": run, "human": human, "model": model, "seconds": round(seconds, 1)})
+            print(f"{essay_id} run {run}: human {sum(human):4d}  model {sum(model):4d}  "
                   f"{model}  ({seconds:.0f} s)")
 
     if not rows:
