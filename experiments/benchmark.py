@@ -4,7 +4,7 @@ Each input file is JSON: {"theme": "...", "text": "...", "human": [c1, c2, c3, c
 Prints only numbers (never essay text) and saves the per-essay scores under samples/, which is git-ignored.
 
 Usage (with the app running on localhost:8080):
-    python experiments/benchmark.py [--runs 1] [--label gemma3-4b]
+    python experiments/benchmark.py [--runs 1] [--label gemma3-4b] [--url http://localhost:8081/api/evaluations]
 """
 
 import argparse
@@ -22,9 +22,9 @@ API_URL = "http://localhost:8080/api/evaluations"
 TIMEOUT_SECONDS = 600
 
 
-def grade(theme, text):
+def grade(theme, text, api_url=API_URL):
     body = json.dumps({"theme": theme, "text": text}).encode("utf-8")
-    request = urllib.request.Request(API_URL, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
+    request = urllib.request.Request(api_url, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
     with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
         result = json.load(response)
     return [c["score"] for c in result["competencies"]]
@@ -38,6 +38,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=1, help="times each essay is graded")
     parser.add_argument("--label", default="run", help="name saved with the results, e.g. the model")
+    parser.add_argument("--url", default=API_URL, help="evaluation endpoint, to run several apps on other ports")
     args = parser.parse_args()
 
     files = sorted(BENCHMARK_DIR.glob("*.json"))
@@ -53,7 +54,7 @@ def main():
         for run in range(1, args.runs + 1):
             started = time.time()
             try:
-                model = grade(essay["theme"], essay["text"])
+                model = grade(essay["theme"], essay["text"], args.url)
             except (urllib.error.URLError, TimeoutError, KeyError) as e:
                 failures += 1
                 print(f"{essay_id} run {run}: FAILED ({type(e).__name__})")
