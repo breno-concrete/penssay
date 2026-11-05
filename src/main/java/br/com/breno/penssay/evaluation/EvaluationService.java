@@ -2,6 +2,8 @@ package br.com.breno.penssay.evaluation;
 
 import com.openai.errors.OpenAIInvalidDataException;
 import com.openai.errors.OpenAIIoException;
+import br.com.breno.penssay.web.UsageKind;
+import br.com.breno.penssay.web.UsageLimiter;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,10 @@ public class EvaluationService {
     // caps each answer so a repetition loop fails fast and a runaway answer cannot burn credits
     private static final int MAX_ANSWER_TOKENS = 1024;
     private static final double RETRY_TEMPERATURE = 0.4;
+    // ENEM gives zero to a text of 7 lines or fewer; a handwritten line has about 10 words
+    static final int MIN_WORDS = 70;
+    private static final String TOO_SHORT_JUSTIFICATION = "Texto insuficiente: a redação tem menos de 70 palavras "
+            + "(cerca de 7 linhas), e o ENEM atribui nota zero a textos com até 7 linhas.";
 
     private final ChatClient chatClient;
     private final Resource systemPrompt;
@@ -33,19 +39,22 @@ public class EvaluationService {
     private final List<String> rubrics; // rubrics.get(0) is competency 1
     private final String model;
     private final ScoreNormalizer scoreNormalizer;
+    private final UsageLimiter usageLimiter;
 
     public EvaluationService(
             ChatClient.Builder builder,
             @Value("classpath:/prompts/evaluation.st") Resource systemPrompt,
             @Value("classpath:/prompts/evaluation-user.st") Resource userPrompt,
             @Value("${penssay.evaluation.model}") String model,
-            ScoreNormalizer scoreNormalizer) throws IOException {
+            ScoreNormalizer scoreNormalizer,
+            UsageLimiter usageLimiter) throws IOException {
 
         this.chatClient = builder.build();
         this.systemPrompt = systemPrompt;
         this.userPrompt = userPrompt;
         this.model = model;
         this.scoreNormalizer = scoreNormalizer;
+        this.usageLimiter = usageLimiter;
 
         this.rubrics = new ArrayList<>();
         for (int number = 1; number <= COMPETENCY_COUNT; number++) {
@@ -54,7 +63,14 @@ public class EvaluationService {
         }
     }
 
-    public EssayEvaluation evaluate(String theme, String text) {
+    public EssayEvaluation evaluate(String theme, String text, String origin) {
+        // decided here, without the model: a too short text costs nothing and does not use the client's limit
+        if (wordCount(text) < MIN_WORDS) {
+            return tooShort();
+        }
+        // reserved before the five paid calls; refuses with UsageLimitException when a limit is reached
+        usageLimiter.acquire(UsageKind.EVALUATION, origin);
+
         // one call per competency: a model grades one rubric at a time much more consistently than all five at once.
         // The five calls are independent, so they run at the same time and the essay takes as long as the slowest one
         List<ModelCompetency> answers = new ArrayList<>();
@@ -73,6 +89,19 @@ public class EvaluationService {
         List<CompetencyEvaluation> competencies = scoreNormalizer.normalizeAll(answers);
 
         return new EssayEvaluation(competencies, scoreNormalizer.total(competencies), null);
+    }
+
+    static int wordCount(String text) {
+        String trimmed = text.strip();
+        return trimmed.isEmpty() ? 0 : trimmed.split("\\s+").length;
+    }
+
+    private static EssayEvaluation tooShort() {
+        List<CompetencyEvaluation> zeros = new ArrayList<>();
+        for (int number = 1; number <= COMPETENCY_COUNT; number++) {
+            zeros.add(new CompetencyEvaluation(number, 0, TOO_SHORT_JUSTIFICATION, List.of()));
+        }
+        return new EssayEvaluation(zeros, 0, ZeroReason.TOO_SHORT);
     }
 
     // rethrows what the competency call threw, so callers see the same exceptions as with a sequential call

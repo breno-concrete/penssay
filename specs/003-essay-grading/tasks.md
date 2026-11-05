@@ -89,12 +89,12 @@ todas as notas e o total em zero e com `zeroReason` preenchido.
 
 ### Testes da História 2
 
-- [ ] T018 [US2] [B guiado] Criar `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java` com `ChatClient` mockado: texto com 69 palavras (espalhadas em várias linhas, com linhas em branco) → tudo zero, `TOO_SHORT` e `verifyNoInteractions` no cliente; texto com 70 palavras numa linha só → o modelo é chamado
+- [X] T018 (coberta pela 004, T016) [US2] [B guiado] Criar `EvaluationServiceTest` em `src/test/java/br/com/breno/penssay/evaluation/EvaluationServiceTest.java` com `ChatClient` mockado: texto com 69 palavras (espalhadas em várias linhas, com linhas em branco) → tudo zero, `TOO_SHORT` e `verifyNoInteractions` no cliente; texto com 70 palavras numa linha só → o modelo é chamado
 - [ ] T019 [US2] [B guiado] Acrescentar ao `EvaluationServiceTest`: triagem (`ModelScreening`) com `fullyOffTopic=true` → tudo zero, `OFF_TOPIC` e as 5 chamadas de correção não acontecem; `notArgumentative=true` → `NOT_ARGUMENTATIVE`; os dois `true` → `OFF_TOPIC`
 
 ### Implementação da História 2
 
-- [ ] T020 [US2] [B] Implementar a regra das 70 palavras no início de `EvaluationService.evaluate` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`, devolvendo 5 competências com nota 0, justificativa explicando o motivo e `zeroReason = TOO_SHORT`, sem chamar o modelo
+- [X] T020 (coberta pela 004, T019) [US2] [B] Implementar a regra das 70 palavras no início de `EvaluationService.evaluate` em `src/main/java/br/com/breno/penssay/evaluation/EvaluationService.java`, devolvendo 5 competências com nota 0, justificativa explicando o motivo e `zeroReason = TOO_SHORT`, sem chamar o modelo
 - [ ] T021 [US2] [B] Implementar em `EvaluationService` a chamada de triagem (`prompts/screening.st` → `ModelScreening`) antes das 5 correções e a leitura de `fullyOffTopic` e `notArgumentative`: zerar todas as notas e o total e preencher `zeroReason` (`OFF_TOPIC` tem prioridade)
 - [ ] T022 [US2] [B] Escrever `src/main/resources/prompts/screening.st` com as regras de fuga total (marcar `fullyOffTopic`), texto não dissertativo (marcar `notArgumentative`) e fuga parcial (NÃO zera; fica nas rubricas `competency-2.st` e `competency-3.st`)
 
@@ -132,9 +132,9 @@ competência; conferir status e mensagem de cada caso (contrato, tabela "Erros")
 
 ### Implementação da História 4
 
-- [ ] T027 [US4] [B] Validar tema e texto (nulo, vazio ou só espaços) em `EvaluationController`, lançando `InvalidRequestException` com as mensagens do contrato antes de chamar o serviço
-- [ ] T028 [US4] [B] Converter em `EvaluationService` as exceções do Spring AI: `ResourceAccessException` e `NonTransientAiException` → `EvaluationUnavailableException`; `TransientAiException` ou `JacksonException` que se repetem na segunda tentativa (T042) → `EvaluationFormatException` (o `ScoreNormalizer` já lança a dela para competências erradas)
-- [ ] T029 [US4] [B guiado] Implementar `ApiExceptionHandler` (`@RestControllerAdvice`) em `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`: `InvalidRequestException` → 400, `EvaluationFormatException` → 502, `EvaluationUnavailableException` → 503, sempre com `ErrorResponse` e as mensagens do contrato; nunca registrar o texto da redação em log (RF-014)
+- [X] T027 (coberta pela 004, T011) [US4] [B] Validar tema e texto (nulo, vazio ou só espaços) em `EvaluationController`, lançando `InvalidRequestException` com as mensagens do contrato antes de chamar o serviço
+- [X] T028 (coberta pela 004, T022) [US4] [B] Converter em `EvaluationService` as exceções do Spring AI: `ResourceAccessException` e `NonTransientAiException` → `EvaluationUnavailableException`; `TransientAiException` ou `JacksonException` que se repetem na segunda tentativa (T042) → `EvaluationFormatException` (o `ScoreNormalizer` já lança a dela para competências erradas)
+- [X] T029 (coberta pela 004, T007/T022) [US4] [B guiado] Implementar `ApiExceptionHandler` (`@RestControllerAdvice`) em `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`: `InvalidRequestException` → 400, `EvaluationFormatException` → 502, `EvaluationUnavailableException` → 503, sempre com `ErrorResponse` e as mensagens do contrato; nunca registrar o texto da redação em log (RF-014)
 - [ ] T030 [US4] [B] Validar à mão a tabela do passo 4 do `quickstart.md` (sem tema → 400; Ollama fechado → 503 em poucos segundos)
 
 **Checkpoint**: todos os erros do contrato respondem como especificado.
@@ -168,7 +168,7 @@ mesmo `ScoreNormalizer`; o modelo muda só por configuração.
 
 ## Fase 8: Acabamento e pontos transversais
 
-- [ ] T038 [B guiado] Adaptar a 001 ao handler compartilhado: validar a foto no `TranscriptionController` com `InvalidRequestException` e mapear a indisponibilidade da transcrição no `ApiExceptionHandler` (research.md, decisão 8) em `src/main/java/br/com/breno/penssay/transcription/` e `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`
+- [X] T038 (coberta pela 004, T018/T022) [B guiado] Adaptar a 001 ao handler compartilhado: validar a foto no `TranscriptionController` com `InvalidRequestException` e mapear a indisponibilidade da transcrição no `ApiExceptionHandler` (research.md, decisão 8) em `src/main/java/br/com/breno/penssay/transcription/` e `src/main/java/br/com/breno/penssay/web/ApiExceptionHandler.java`
 - [ ] T039 [P] [B] Medir estabilidade (3 correções da mesma redação, variação do total ≤ 80), sanity check (nota 1000 ≥ 880; redação sem proposta com C5 ≤ 80) e tempo da 2ª chamada (≤ 60 s) e registrar em `docs/evaluation.md` (CS-003, CS-004, CS-006). Parcial em 2026-10-16 (research.md, 11.1): variação ≤ 80 ✅, nota 1000 = 760–840 ❌, tempo 37–57 s ✅; falta a redação sem proposta e passar para `docs/evaluation.md`
 - [ ] T040 [P] [C] Documentar `POST /api/evaluations`, `?mode=scores` e os erros no `README.md`
 - [ ] T041 [C] Rodar `./mvnw test` com o Ollama desligado e o `quickstart.md` inteiro; conferir que nenhum log contém texto de redação (RF-014)

@@ -114,7 +114,7 @@ src/main/resources/
 
 #### `POST /api/transcriptions`
 
-Request: `multipart/form-data` with a `photo` field (JPEG or PNG, up to 10 MB).
+Request: `multipart/form-data` with a `photo` field (JPEG, PNG or WebP, up to 10 MB). The type is decided from the file's first bytes; the declared content type is ignored.
 
 Response `200 OK`:
 
@@ -126,13 +126,15 @@ Response `200 OK`:
 
 Words wrapped in `[?...]` are uncertain readings. `[illegible]` marks a word the model could not read.
 
-Errors return `{"message": "..."}` in Brazilian Portuguese:
+Errors return `{"message": "..."}` in Brazilian Portuguese (full list with messages in [contracts/api-errors.md](specs/004-launch-protection/contracts/api-errors.md)):
 
 | Status | When |
 | --- | --- |
-| `400 Bad Request` | No photo, empty file, not JPEG/PNG, or larger than 10 MB |
-| `422 Unprocessable Entity` | No handwritten text was found in the photo |
-| `503 Service Unavailable` | Ollama is not running or the model is not available |
+| `400 Bad Request` | No photo, empty file, or content that is not JPEG/PNG/WebP |
+| `413 Content Too Large` | Photo larger than 10 MB |
+| `429 Too Many Requests` | Photo limit per client or per day reached; `Retry-After` gives the seconds to wait |
+| `502 Bad Gateway` | The provider's answer could not be used, twice in a row |
+| `503 Service Unavailable` | The model provider is down or refused the key |
 
 #### `POST /api/evaluations`
 
@@ -164,7 +166,14 @@ Response `200 OK`:
 }
 ```
 
-The `competencies` array always has 5 items, ordered from 1 to 5.
+The `competencies` array always has 5 items, ordered from 1 to 5. A text under 70 words gets 5 zeros and `"zeroReason": "TOO_SHORT"` without calling the model.
+
+| Status | When |
+| --- | --- |
+| `400 Bad Request` | Theme or text missing or blank, theme over 300 characters, text over 6,000 characters, or a body that is not JSON |
+| `429 Too Many Requests` | Correction limit per client or per day reached; `Retry-After` gives the seconds to wait |
+| `502 Bad Gateway` | The model answered twice in a shape that cannot be used; no partial grade is ever returned |
+| `503 Service Unavailable` | The model provider is down or refused the key |
 
 ## Domain rules: ENEM essay scoring
 
@@ -256,6 +265,29 @@ spring.servlet.multipart.max-request-size=10MB
 | `penssay.evaluation.model` | `gemma3:4b` | Ollama model used for grading |
 | `spring.ai.ollama.chat.options.temperature` | `0` | Keeps scores as stable as possible between runs |
 
+### Cost protection
+
+Every paid model call is checked first against these limits ([spec 004](specs/004-launch-protection/spec.md)). Counters live in memory and reset on restart.
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `penssay.limits.enabled` | `true` (`PENSSAY_LIMITS_ENABLED`) | Set `PENSSAY_LIMITS_ENABLED=false` only on your machine, e.g. to run `experiments/benchmark.py` |
+| `penssay.limits.window` | `1h` | Window for the per-client limits |
+| `penssay.limits.evaluations-per-origin` | `10` | Corrections per client IP per window |
+| `penssay.limits.transcriptions-per-origin` | `20` | Photos per client IP per window |
+| `penssay.limits.evaluations-per-day` | `1500` | Corrections for the whole app per day (midnight in Brasília) |
+| `penssay.limits.transcriptions-per-day` | `3000` | Photos for the whole app per day |
+| `penssay.limits.max-text-chars` | `6000` | Longest essay text accepted |
+| `penssay.limits.max-theme-chars` | `300` | Longest theme accepted |
+
+`spring.threads.virtual.enabled=true` keeps the ~12 s waits for the provider from exhausting the server's threads (`experiments/load_test.py` measures it), and `server.forward-headers-strategy=native` takes the client IP from the hosting proxy without letting a client pick its own.
+
+### Running it in public
+
+1. Create an OpenRouter key used **only** in production and set a **credit limit** on it (for example US$ 10) in the OpenRouter dashboard. It is the last barrier: the app's daily caps stop near US$ 9 a day, and the key cannot spend more than its limit even if the app is restarted or misconfigured.
+2. Store the key as a secret of the hosting service (`OPENROUTER_API_KEY`), never in the repository, the Dockerfile or the image.
+3. After the deploy, check the client IP: send requests with two different `X-Forwarded-For` headers from the same machine. Both must hit the same limit. If each gets its own, set `server.tomcat.remoteip.internal-proxies` to the host's proxy range ([quickstart, step 6](specs/004-launch-protection/quickstart.md)).
+
 ## Evaluation
 
 Results are recorded in [`docs/evaluation.md`](docs/evaluation.md) and in the DEV post.
@@ -293,7 +325,7 @@ This section guides any coding agent (such as Claude Code) working in this repos
 
 ### Principles
 
-- Every model call goes to the local Ollama server. Never add a call to a hosted or paid AI API.
+- Model calls go to the provider set in `application.properties` (OpenRouter; the `local` profile uses Ollama). Every paid call must pass `UsageLimiter` and the input checks first, and invalid input must never reach the model (constitution v2.0.0, principle I).
 - Never commit essay photos or essay texts. Samples live in `samples/`, which is git-ignored.
 - Keep the scope listed in [Features](#features). Don't add a database, authentication or a frontend framework.
 - Prompts live in `src/main/resources/prompts/` as `.st` files, never hardcoded in Java classes.
@@ -327,7 +359,8 @@ This section guides any coding agent (such as Claude Code) working in this repos
 
 ## Post-deadline changes
 
-None yet.
+- 2026-11-03: model provider switched from local Ollama to OpenRouter (Gemini 3.1 Flash Lite for transcription, Gemma 4 31B for grading), chosen by the benchmarks in `experiments/`; the five competencies are graded in parallel.
+- 2026-11-05: cost and abuse protection for the public launch on ENEM day ([spec 004](specs/004-launch-protection/spec.md)): per-client and daily limits, size limits, photo type from its bytes, the 70-word rule without a model call, central error handling, virtual threads. Constitution amended to v2.0.0.
 
 ## License
 

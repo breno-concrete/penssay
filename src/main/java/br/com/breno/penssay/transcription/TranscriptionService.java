@@ -2,6 +2,8 @@ package br.com.breno.penssay.transcription;
 
 import com.openai.errors.OpenAIInvalidDataException;
 import com.openai.errors.OpenAIIoException;
+import br.com.breno.penssay.web.UsageKind;
+import br.com.breno.penssay.web.UsageLimiter;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +11,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
 
 @Service
 public class TranscriptionService {
@@ -20,21 +21,25 @@ public class TranscriptionService {
     private final ChatClient chatClient;
     private final Resource prompt;
     private final String model;
+    private final UsageLimiter usageLimiter;
 
     public TranscriptionService(
             ChatClient.Builder builder,
             @Value("classpath:/prompts/transcription.st") Resource prompt,
-            @Value("${penssay.transcription.model}") String model) {
+            @Value("${penssay.transcription.model}") String model,
+            UsageLimiter usageLimiter) {
 
         this.chatClient = builder.build();
         this.prompt = prompt;
         this.model = model;
+        this.usageLimiter = usageLimiter;
     }
 
-    public String transcribe(byte[] photo, String contentType){
+    // mimeType is the one PhotoValidator detected from the bytes
+    public String transcribe(byte[] photo, MimeType mimeType, String origin) {
+        // reserved before the paid call; refuses with UsageLimitException when a limit is reached
+        usageLimiter.acquire(UsageKind.TRANSCRIPTION, origin);
         Resource image = new ByteArrayResource(photo);
-
-        MimeType mimeType = MimeTypeUtils.parseMimeType(contentType);
 
         try {
             return askModel(mimeType, image);
