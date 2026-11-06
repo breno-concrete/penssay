@@ -288,6 +288,24 @@ Every paid model call is checked first against these limits ([spec 004](specs/00
 2. Store the key as a secret of the hosting service (`OPENROUTER_API_KEY`), never in the repository, the Dockerfile or the image.
 3. After the deploy, check the client IP: send requests with two different `X-Forwarded-For` headers from the same machine. Both must hit the same limit. If each gets its own, set `server.tomcat.remoteip.internal-proxies` to the host's proxy range ([quickstart, step 6](specs/004-launch-protection/quickstart.md)).
 
+#### Deploying on Fly.io
+
+The repository has a [`Dockerfile`](Dockerfile) (builds the jar inside the image, runs as a non-root user) and a [`fly.toml`](fly.toml) (São Paulo region, one always-on 512 MB machine, ~US$ 3–5 a month).
+
+```bash
+# once: install flyctl (https://fly.io/docs/flyctl/install/) and log in
+fly auth login
+fly launch --no-deploy --copy-config      # keeps fly.toml; pick another app name if "penssay" is taken
+fly secrets set OPENROUTER_API_KEY=...    # the production key with a credit limit; type it, never commit it
+fly deploy
+fly scale count 1                         # exactly one machine: the usage limits live in its memory
+```
+
+- **One machine only.** `fly launch` may create two for redundancy. With two, each keeps its own counters and every limit doubles.
+- **Logs:** `fly logs`. They show the error type only, never an essay.
+- **Change a limit without a new build:** `fly secrets set PENSSAY_LIMITS_EVALUATIONSPERDAY=2000` restarts the machine with the new value. Spring reads the property name in upper case without its dashes (`evaluations-per-day` → `EVALUATIONSPERDAY`); an underscore there would mean a dot and the value would be ignored.
+- **Local check of the image:** `docker build -t penssay . && docker run -p 8080:8080 -e OPENROUTER_API_KEY=... penssay`.
+
 ## Evaluation
 
 Results are recorded in [`docs/evaluation.md`](docs/evaluation.md) and in the DEV post.
